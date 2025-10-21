@@ -12,5 +12,13 @@
   "type": "commonjs",
   "dependencies": {
     "puppeteer": "^24.23.0"
+  },
+  "devDependencies": {
+    "@types/puppeteer": "^5.4.7",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "typescript": "^5.9.3"
   }
 }
