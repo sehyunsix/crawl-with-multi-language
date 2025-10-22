@@ -1,16 +1,7 @@
 import type { JobUrlExtractor , JobUrl } from "../../base.js";
 
-
-class KakaoJobUrlExtractor implements JobUrlExtractor {
-
-    private domain : string  = "www.skcareers.com";
-    
-    public getDomain(): string {
-        return this.domain;
-    }
-
-    async extractJobUrls(): Promise<JobUrl[] | null> {        
-        const response = await fetch("https://careers.kakao.com/public/api/job-list?skillSet=&part=TECHNOLOGY&company=KAKAO&keyword=&employeeType=&page=1", {
+async function  getJobUrlsFromKakaoApiWithPage(page :number): Promise<JobUrl[]> {
+    const response = await fetch(`https://careers.kakao.com/public/api/job-list?skillSet=&part=TECHNOLOGY&company=KAKAO&keyword=&employeeType=&page=${page}`, {
         "headers": {
             "accept": "application/json, text/plain, */*",
             "accept-language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
@@ -22,21 +13,36 @@ class KakaoJobUrlExtractor implements JobUrlExtractor {
             "sec-fetch-mode": "cors",
             "sec-fetch-site": "same-origin"
         },
-        "referrer": "https://careers.kakao.com/jobs?skillSet=&page=1&company=KAKAO&part=TECHNOLOGY&employeeType=&keyword=&size=100",
+        "referrer": "https://careers.kakao.com/jobs?skillSet=&page=1&company=KAKAO&part=TECHNOLOGY&employeeType=&keyword=",
         "body": null,
         "method": "GET",
         "mode": "cors",
         "credentials": "include"
-        });
+    }
 
-        const data = await response.json();
+    )
+    const data = await response.json();
         // console.log("response data:", data);
         
-        const jobUrls : JobUrl[]   =  data.jobList.map( (job: any) => ( {
+    const jobUrls : JobUrl[]   =  data.jobList.map( (job: any) => ( {
             url: `https://careers.kakao.com/jobs/${job.realId}`,
             createdAt: new Date().toISOString()
-        } ) );
+    } ) );
+    return jobUrls;
+}
 
+class KakaoJobUrlExtractor implements JobUrlExtractor {
+
+    private domain : string  = "careers.kakao.com";
+    
+    public getDomain(): string {
+        return this.domain;
+    }
+
+    async extractJobUrls(): Promise<JobUrl[] | null> {        
+        const first = await getJobUrlsFromKakaoApiWithPage(1);
+        const second = await getJobUrlsFromKakaoApiWithPage(2);
+        const jobUrls = first.concat(second);
         return jobUrls;
     }
 }
