@@ -1,7 +1,7 @@
-import type { JoBUrlExtractor , JobUrl } from "./base.js";
+import type { JobUrlExtractor , JobUrl } from "../base.js";
 const puppeteer = require("puppeteer");
 
-class TossJobUrlExtractor implements JoBUrlExtractor {
+class TossJobUrlExtractor implements JobUrlExtractor {
 
     private domain : string  = "toss.im";
     

@@ -8,11 +8,16 @@ interface JobUrl {
 interface Job extends JobUrl {
    id: string;
    title: string;
-   text: string;
+   rawJobsText: string;
    company: string;
-   jobDepartment: string;
+   requireExperience: "신입" | "경력" | null;
+   jobType: "정규직" | "인턴" | null;
+   regionText: string | null;
+   requirements: string;
+   department: string;
    jobDescription: string;
-   location: string | null;
+   idealCandidate: string | null;
+   preferredQualifications: string | null;
    applyStartDate: string | null;
    applyEndDate: string | null;
 }
@@ -20,7 +25,7 @@ interface Job extends JobUrl {
 
 type Source = string | ImageBitmap
 
-interface JoBUrlExtractor{
+interface JobUrlExtractor{
 
     getDomain(): string;
 
@@ -30,8 +35,8 @@ interface JoBUrlExtractor{
 
 interface JobExtractor{
 
-    extractJobDetail( source : Source ): Promise<Job[] | null>;
+    extractJobDetail( source : JobUrl ): Promise<Job[] | null>;
 
 }
 
-export type { JobUrl, Job, Source, JoBUrlExtractor, JobExtractor };
+export type { JobUrl, Job, Source, JobUrlExtractor, JobExtractor };

@@ -1,7 +1,8 @@
-import type  {JoBUrlExtractor , JobUrl } from "./base.js";
+import type  {JobUrlExtractor , JobUrl } from "./base.js";
 
-const jobUrlExtractors : JoBUrlExtractor[] = [
-    require("./tossUrlExtractor.ts"),
+const jobUrlExtractors : JobUrlExtractor[] = [
+    // require("./url/tossUrlExtractor.ts"),
+    require("./url/naverUrlExtractor.ts")
 ];
 
 
@@ -15,13 +16,10 @@ const jobUrlExtractors : JoBUrlExtractor[] = [
         if ( jobUrls && jobUrls.length > 0 ) {
 
             console.log( `Extracted ${ jobUrls.length } job URLs from ${ extractor.getDomain() }` );
-
+            console.log( jobUrls );
             return jobUrls;
-
         }
-
     }
-
     return null;
 
 })();    
