@@ -2,7 +2,8 @@ import type  {JobUrlExtractor , JobUrl } from "./base.js";
 
 const jobUrlExtractors : JobUrlExtractor[] = [
     // require("./url/tossUrlExtractor.ts"),
-    require("./url/naverUrlExtractor.ts")
+    // require("./url/naverUrlExtractor.ts"),
+    require("./url/donamuUrlExtractor.ts")
 ];
 
 

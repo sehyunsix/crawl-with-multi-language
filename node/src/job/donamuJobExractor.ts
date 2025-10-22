@@ -3,7 +3,7 @@ const  JobUtil = require("../utils/job.ts")
 const path = require('path'); // 파일 경로를 위해 path 모듈 사용
 const puppeteer = require("puppeteer");
 
-class TossJobExtractor implements JobExtractor {
+class DunamuJobExtractor implements JobExtractor {
     
  
     async extractJobDetail( source : JobUrl ): Promise< Job[] | null> {
@@ -19,22 +19,22 @@ class TossJobExtractor implements JobExtractor {
 
         await page.addScriptTag({ path: path.resolve('./src/utils/browser-util.js') });
 
-        await page.waitForSelector("span[class^='css-nkt64x']");
+        await page.waitForSelector(".board_tit > p");
 
         const job = await page.evaluate( () => {
      
         const win = (window as any);
-        const title = win.safeGetText("span[class^='css-nkt64x']"); 
-        const rawJobsText = win.safeGetText("div[class^='css-1urdq9i']");
-        const departmentDescription =win.getContentByTitle("p[class^='css-92x98k']", "합류하게 될 팀에 대해 알려드려요");
+        const title = win.safeGetText(".board_tit > p"); 
+        const rawJobsText = win.safeGetText(".board_txt");
+        const departmentDescription =win.getContentAfterTitle(".article.top", "조직 소개")
         const department = win.extractTeamEntities(departmentDescription)[0] || null;
-        const checkBeforeApply = win.getContentByTitle("p[class^='css-92x98k']", "지원 전 꼭 확인해주세요!");
-        const jobDescription = win.getContentByTitle("p[class^='css-92x98k']", "합류하면 함께 할 업무에요") +departmentDescription;
-        const requirements = win.getContentByTitle("p[class^='css-92x98k']", "이런 분과 함께하고 싶어요");
-        const texts = win.safeGetChildsText("div[class^='css-1kbe2mo eh5ls9o0']");
-        const company = texts[0];
-        const jobType = win.rawJobTypeTextToEnum( texts[1] );
-        const requireExperience =win.rawRequireExperienceTextToEnum( checkBeforeApply );
+        const jobDescription = win.getContentAfterTitle(".article.top","주요업무");
+        const requirements = win.getContentAfterTitle(".article.top" ,"자격요건")
+        const preferredQualifications = win.getContentAfterTitle(".article.top","우대사항")
+        const company = "두나무"
+        const regionText =win.getContentByText("li", "근무지역").split(":")[1];
+        const jobType = win.rawJobTypeTextToEnum( win.getContentByText("li","고용형태") );
+        const requireExperience =win.rawRequireExperienceTextToEnum( win.getContentByText("li","채용유형")  );
     
     // --- 최종 반환 객체 ---
         return {
@@ -44,12 +44,12 @@ class TossJobExtractor implements JobExtractor {
                     company: company,
                     requireExperience: requireExperience,
                     jobType: jobType,
-                    regionText: null,
+                    regionText: regionText,
                     requirements: requirements,
                     department: department,
                     jobDescription: jobDescription,
                     idealCandidate:  null,
-                    preferredQualifications: null,
+                    preferredQualifications: preferredQualifications,
                     applyStartDate: null,
                     applyEndDate: null,
                     url: window.location.href,
@@ -65,10 +65,9 @@ class TossJobExtractor implements JobExtractor {
 
 if ( require.main === module ) {
     ( async () => {
-        const extractor = new TossJobExtractor();
+        const extractor = new DunamuJobExtractor();
         const testUrl : JobUrl = {
-            url: "https://toss.im/career/job-detail?job_id=6639083003",
-            domain: "toss.im",
+            url: "https://www.dunamu.com/careers/jobs/1521",
             createdAt: new Date().toISOString()
         };
         const jobs = await extractor.extractJobDetail( testUrl );
@@ -76,5 +75,5 @@ if ( require.main === module ) {
     } )();
 }
 
-const tossJobExtractor = new TossJobExtractor();
-module.exports = tossJobExtractor;
+const dunamuJobExtractor = new DunamuJobExtractor();
+module.exports = dunamuJobExtractor;

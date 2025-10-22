@@ -1,6 +1,5 @@
 interface JobUrl {
     url: string;
-    domain: string;
     createdAt: string;
 }
 
