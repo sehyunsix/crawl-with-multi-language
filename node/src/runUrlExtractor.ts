@@ -5,7 +5,8 @@ const jobUrlExtractors : JobUrlExtractor[] = [
     require("./url/extractor/naverUrlExtractor.ts"),
     require("./url/extractor/donamuUrlExtractor.ts"),
     require("./url/extractor/lineUrlExtractor.ts"),
-    require("./url/extractor/ktUrlExtractor.ts")
+    require("./url/extractor/ktUrlExtractor.ts"),
+    require("./url/extractor/sktUrlExtractor.ts")
 ];
 
 
