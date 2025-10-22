@@ -1,4 +1,5 @@
 import type { JobExtractor , Job , JobUrl } from "../base.js";
+const path = require('path'); // 파일 경로를 위해 path 모듈 사용
 const puppeteer = require("puppeteer");
 
 class TossJobExtractor implements JobExtractor {
@@ -15,65 +16,23 @@ class TossJobExtractor implements JobExtractor {
         
         await page.goto( url , { waitUntil: "domcontentloaded"});
 
+        await page.addScriptTag({ path: path.resolve('./src/utils/browser-util.js') });
+
         await page.waitForSelector("span[class^='css-nkt64x']");
 
         const job = await page.evaluate( () => {
      
-        const getContentByTitle = (rootElement: Element | null, titleText: string): string => {
-            if (!rootElement) return "";
-            
-            const allTitles = Array.from(rootElement.querySelectorAll("p[class^='css-92x98k']")) as HTMLParagraphElement[];
-            const titleElement = allTitles.find(p => p.innerText.trim() === titleText);
-
-            if (!titleElement) return "";
-            
-            const contentElement = titleElement.nextElementSibling;
-            return (contentElement as HTMLElement)?.innerText?.trim() || "";
-        };
-
-
-        const safeGetChildsText = (selector: string): string[] => {
-            
-            const parentElement = document.querySelector(selector) as HTMLElement;
-
-            if (!parentElement) {
-                return [];
-            }
-            return Array.from(parentElement.children)
-                .map(child => {
-                    return (child as HTMLElement)?.innerText?.trim() || "";
-                })
-                .filter(text => text.length > 0);
-        };
- 
-        const extractTeamEntities=(text : string): string[] => {
-            const regex = /\b[A-Z][a-z]+(?: [A-Z][a-z]+)* (?:Part|Department|파트|Team)\b/g;
-            const matches = text.match(regex);
-
-            if (!matches) {
-                return [];
-            }
-            return [...new Set(matches)];
-        }
-
-        const safeGetText = (selector: string): string => {
-            const element = document.querySelector(selector) as HTMLElement;
-            return element?.innerText?.trim() || "";
-        };
-
-
-        const title = safeGetText("span[class^='css-nkt64x']"); 
-        const company = safeGetText("a[class^='css-1egxyvc']"); // "토스뱅크"
-        const contentRoot = document.querySelector("div[class^='css-1urdq9i']");
-        const rawJobsText = safeGetText("div[class^='css-1urdq9i']");
-        const departmentDescription =getContentByTitle(contentRoot, "합류하게 될 팀에 대해 알려드려요");
-        const department = extractTeamEntities(departmentDescription)[0] || null;
-        console.log("department:", department);
-        const checkBeforeApply = getContentByTitle(contentRoot, "지원 전 꼭 확인해주세요!");
-        const jobDescription = getContentByTitle(contentRoot, "합류하면 함께 할 업무에요") +departmentDescription;
-        const requirements = getContentByTitle(contentRoot, "이런 분과 함께하고 싶어요");
+        const win = (window as any);
+        const title = win.safeGetText("span[class^='css-nkt64x']"); 
+        const company = win.safeGetText("a[class^='css-1egxyvc']"); // "토스뱅크"
+        const rawJobsText = win.safeGetText("div[class^='css-1urdq9i']");
+        const departmentDescription =win.getContentByTitle("p[class^='css-92x98k']", "합류하게 될 팀에 대해 알려드려요");
+        const department = win.extractTeamEntities(departmentDescription)[0] || null;
+        const checkBeforeApply = win.getContentByTitle("p[class^='css-92x98k']", "지원 전 꼭 확인해주세요!");
+        const jobDescription = win.getContentByTitle("p[class^='css-92x98k']", "합류하면 함께 할 업무에요") +departmentDescription;
+        const requirements = win.getContentByTitle("p[class^='css-92x98k']", "이런 분과 함께하고 싶어요");
         let  jobTypeRaw = null;
-        let texts = safeGetChildsText("div[class^='css-1kbe2mo eh5ls9o0']")
+        let texts = win.safeGetChildsText("div[class^='css-1kbe2mo eh5ls9o0']")
         if (texts.length >=2){
             jobTypeRaw = texts[1];
         }
@@ -119,9 +78,7 @@ class TossJobExtractor implements JobExtractor {
         );
 
         await browser.close();
-
         return [ job ];
-
     }
 }
 

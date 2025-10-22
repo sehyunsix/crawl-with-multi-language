@@ -24,4 +24,5 @@ async function autoScroll(page : types.Page) {
     });
 }
 
+
 module.exports = autoScroll;
