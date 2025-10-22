@@ -32,3 +32,15 @@ function getContentByTitle( selector , titleText) {
     const contentElement = titleElement.nextElementSibling;
     return contentElement?.innerText?.trim() || "";
 };
+
+
+function rawJobTypeTextToEnum(rawText) {
+    if (rawText === "인턴") {
+        return "인턴";
+    }
+    return "정규직";
+}
+
+function rawRequireExperienceTextToEnum(rawText) {
+    return rawText?.includes("신입") ? "신입" : "경력";
+}

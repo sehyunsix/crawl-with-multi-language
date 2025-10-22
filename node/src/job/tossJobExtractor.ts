@@ -1,4 +1,5 @@
 import type { JobExtractor , Job , JobUrl } from "../base.js";
+const  JobUtil = require("../utils/job.ts")
 const path = require('path'); // 파일 경로를 위해 path 모듈 사용
 const puppeteer = require("puppeteer");
 
@@ -31,32 +32,11 @@ class TossJobExtractor implements JobExtractor {
         const checkBeforeApply = win.getContentByTitle("p[class^='css-92x98k']", "지원 전 꼭 확인해주세요!");
         const jobDescription = win.getContentByTitle("p[class^='css-92x98k']", "합류하면 함께 할 업무에요") +departmentDescription;
         const requirements = win.getContentByTitle("p[class^='css-92x98k']", "이런 분과 함께하고 싶어요");
-        let  jobTypeRaw = null;
-        let texts = win.safeGetChildsText("div[class^='css-1kbe2mo eh5ls9o0']")
-        if (texts.length >=2){
-            jobTypeRaw = texts[1];
-        }
-        let jobType: "정규직" | "인턴" | null = null;
-        switch (jobTypeRaw) {
-            case "정규직":
-                jobType = "정규직";
-                break;
-            case "인턴":
-                jobType = "인턴";
-                break;
-            default:
-                jobType = "정규직";
-        }
+        const texts = win.safeGetChildsText("div[class^='css-1kbe2mo eh5ls9o0']");
+        const jobType = win.rawJobTypeTextToEnum( texts[1] );
+        const requireExperience =win.rawRequireExperienceTextToEnum( checkBeforeApply );
     
-     
-        let requireExperience: "신입" | "경력" | null = null;
-        if (checkBeforeApply.includes("신입")) {
-            requireExperience = "신입";
-        } else {
-            requireExperience = "경력";
-        }
-
-        // --- 최종 반환 객체 ---
+    // --- 최종 반환 객체 ---
         return {
                     id: 0,
                     title: title,
