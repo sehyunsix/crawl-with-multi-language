@@ -1,7 +1,5 @@
-import type { JobUrlExtractor , JobUrl } from "../base.js";
+import type { JobUrlExtractor , JobUrl } from "../../base.js";
 
-const autoScroll =require("../utils/page.ts");
-const puppeteer = require("puppeteer");
 
 class NaverJobUrlExractor implements JobUrlExtractor {
 
@@ -19,7 +17,6 @@ class NaverJobUrlExractor implements JobUrlExtractor {
         });
         const jobUrls=  await responese.json().then(data => (data.list.map( (job: any) => ( {
             url: job.jobDetailLink,
-            domain: this.domain,
             createdAt: new Date().toISOString()
         } ) ) ) );
         return jobUrls;

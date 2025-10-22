@@ -1,4 +1,4 @@
-import type { JobExtractor , Job , JobUrl } from "../base.js";
+import type { JobExtractor , Job , JobUrl } from "../../base.js";
 const  JobUtil = require("../utils/job.ts")
 const path = require('path'); // 파일 경로를 위해 path 모듈 사용
 const puppeteer = require("puppeteer");
@@ -59,7 +59,7 @@ class NaverJobExtractor implements JobExtractor {
         const win = (window as any);
         const rootElement = document.querySelector(".detail_box");
         const title = win.safeGetText(".card_title"); 
-        const rawJobsText = win.safeGetText(".detail_box");
+        const rawJobsText = win.safeGetText(".detail_box").replace(/\n{2,}/g, '\n').trim();
         const company = "네이버"
         const jobType = win.rawJobTypeTextToEnum( jobPreDetail.empTypeCdNm );
         const regionText =win.getContentByText("li", "근무지역").split(":")[1];

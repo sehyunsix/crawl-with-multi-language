@@ -1,9 +1,9 @@
-import type { JobUrlExtractor , JobUrl } from "../base.js";
+import type { JobUrlExtractor , JobUrl } from "../../base.js";
 const puppeteer = require("puppeteer");
 
-class TossJobUrlExtractor implements JobUrlExtractor {
+class DonamuJobUrlExtractor implements JobUrlExtractor {
 
-    private domain : string  = "toss.im";
+    private domain : string  = "www.dunamu.com";
     
     public getDomain(): string {
         return this.domain;
@@ -17,14 +17,14 @@ class TossJobUrlExtractor implements JobUrlExtractor {
         
         const page = await browser.newPage();
 
-        await page.goto("https://toss.im/career/jobs", { waitUntil: "domcontentloaded"});
+        await page.goto("https://www.dunamu.com/careers/jobs?category=engineering", { waitUntil: "domcontentloaded"});
     
-        const selector = "a[href^='/career/job']";
+        const selector = "a[href^='/careers/jobs']";
 
         await page.waitForSelector(selector);
     
         const urls = await page.evaluate(() =>
-            Array.from(document.querySelectorAll("a[href^='/career/job']"))
+            Array.from(document.querySelectorAll("a[href^='/careers/jobs']"))
                 .map(a  => ( a as  HTMLAnchorElement).href)
         );
     
@@ -39,5 +39,5 @@ class TossJobUrlExtractor implements JobUrlExtractor {
 }
 
 
-const tossJoBUrlExtractor = new TossJobUrlExtractor();
-module.exports = tossJoBUrlExtractor;
+const donamuJoBUrlExtractor = new DonamuJobUrlExtractor();
+module.exports = donamuJoBUrlExtractor;

@@ -1,4 +1,4 @@
-import type { JobExtractor , Job , JobUrl } from "../base.js";
+import type { JobExtractor , Job , JobUrl } from "../../base.js";
 const  JobUtil = require("../utils/job.ts")
 const path = require('path'); // 파일 경로를 위해 path 모듈 사용
 const puppeteer = require("puppeteer");
@@ -25,7 +25,7 @@ class TossJobExtractor implements JobExtractor {
      
         const win = (window as any);
         const title = win.safeGetText("span[class^='css-nkt64x']"); 
-        const rawJobsText = win.safeGetText("div[class^='css-1urdq9i']");
+        const rawJobsText = win.safeGetText("div[class^='css-1urdq9i']").replace(/\n{2,}/g, '\n').trim();
         const departmentDescription =win.getContentByTitle("p[class^='css-92x98k']", "합류하게 될 팀에 대해 알려드려요");
         const department = win.extractTeamEntities(departmentDescription)[0] || null;
         const checkBeforeApply = win.getContentByTitle("p[class^='css-92x98k']", "지원 전 꼭 확인해주세요!");
@@ -68,7 +68,6 @@ if ( require.main === module ) {
         const extractor = new TossJobExtractor();
         const testUrl : JobUrl = {
             url: "https://toss.im/career/job-detail?job_id=6639083003",
-            domain: "toss.im",
             createdAt: new Date().toISOString()
         };
         const jobs = await extractor.extractJobDetail( testUrl );

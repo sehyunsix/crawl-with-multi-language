@@ -1,9 +1,11 @@
 import type  {JobUrlExtractor , JobUrl } from "./base.js";
 
 const jobUrlExtractors : JobUrlExtractor[] = [
-    // require("./url/tossUrlExtractor.ts"),
-    // require("./url/naverUrlExtractor.ts"),
-    require("./url/donamuUrlExtractor.ts")
+    require("./url/extractor/tossUrlExtractor.ts"),
+    require("./url/extractor/naverUrlExtractor.ts"),
+    require("./url/extractor/donamuUrlExtractor.ts"),
+    require("./url/extractor/lineUrlExtractor.ts"),
+    require("./url/extractor/ktUrlExtractor.ts")
 ];
 
 
@@ -15,10 +17,7 @@ const jobUrlExtractors : JobUrlExtractor[] = [
         const jobUrls = await extractor.extractJobUrls();
 
         if ( jobUrls && jobUrls.length > 0 ) {
-
             console.log( `Extracted ${ jobUrls.length } job URLs from ${ extractor.getDomain() }` );
-            console.log( jobUrls );
-            return jobUrls;
         }
     }
     return null;

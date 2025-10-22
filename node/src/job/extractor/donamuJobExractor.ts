@@ -1,4 +1,4 @@
-import type { JobExtractor , Job , JobUrl } from "../base.js";
+import type { JobExtractor , Job , JobUrl } from "../../base.js";
 const  JobUtil = require("../utils/job.ts")
 const path = require('path'); // 파일 경로를 위해 path 모듈 사용
 const puppeteer = require("puppeteer");
@@ -25,7 +25,7 @@ class DunamuJobExtractor implements JobExtractor {
      
         const win = (window as any);
         const title = win.safeGetText(".board_tit > p"); 
-        const rawJobsText = win.safeGetText(".board_txt");
+        const rawJobsText = win.safeGetText(".board_txt").replace(/\n{2,}/g, '\n').trim();
         const departmentDescription =win.getContentAfterTitle(".article.top", "조직 소개")
         const department = win.extractTeamEntities(departmentDescription)[0] || null;
         const jobDescription = win.getContentAfterTitle(".article.top","주요업무");
