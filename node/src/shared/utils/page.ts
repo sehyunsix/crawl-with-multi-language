@@ -1,4 +1,4 @@
-import types = require("puppeteer");
+import types from "puppeteer";
 
     async function autoScroll(page : types.Page , count : number =  10) {
    // [수정 1] evaluate에 전달되는 함수를 'async'로 만듭니다.

@@ -1,6 +1,5 @@
 interface JobUrl {
     url: string;
-    createdAt: string;
 }
 
 
@@ -12,9 +11,10 @@ interface Job extends JobUrl {
    requireExperience: "신입" | "경력" | null;
    jobType: "정규직" | "인턴" | null;
    regionText: string | null;
-   requirements: string;
-   department: string;
-   jobDescription: string;
+   requirements: string | null;
+   department: string | null;
+   jobDescription: string| null;
+   favicon : string | null;
    idealCandidate: string | null;
    preferredQualifications: string | null;
    applyStartDate: string | null;
@@ -35,6 +35,12 @@ interface JobUrlExtractor{
 interface JobExtractor{
 
     extractJobDetail( source : JobUrl ): Promise<Job[] | null>;
+
+}
+
+interface JobPipeline {
+    
+    processJobs( jobs: Job[] ): Promise<void>;
 
 }
 

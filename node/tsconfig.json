@@ -1,16 +1,25 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
-  "compilerOptions": {
+    "include": [
+        "src/**/*.ts",      // 기존 소스 코드
+        "src/**/*.d.ts"   // <-- 전역 타입 선언 파일이 포함되도록 추가
+    ],
+    // Visit https://aka.ms/tsconfig to read more about this file
+    "compilerOptions": {
     // File Layout
-    // "rootDir": "./src",
-    // "outDir": "./dist",
+    "rootDir": "./src",
+    "outDir": "./dist",
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
+    
     "module": "nodenext",
     "target": "esnext",
-    "types": ["node"],
+    "lib": ["dom", "esnext"],
+    // "types": ["node"],
     "esModuleInterop": true,
+    "allowJs": true,
+    "moduleResolution": "nodenext",
+    "downlevelIteration": true,  // for-of 사용 허용 (선택)
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
@@ -24,22 +33,13 @@
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-
-    // Style Options
-    // "noImplicitReturns": true,
-    // "noImplicitOverride": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "noPropertyAccessFromIndexSignature": true,
-
-    // Recommended Options
     "strict": true,
-    "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "noImplicitAny": true,
+    // "allowSyntheticDefaultImports": false
   }
 }

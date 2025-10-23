@@ -1,4 +1,4 @@
-import type  {JobUrlExtractor , JobUrl } from "./base.js";
+import type  {JobUrlExtractor , JobUrl } from "./shared/base.js";
 
 const jobUrlExtractors : JobUrlExtractor[] = [
     require("./url/extractor/tossUrlExtractor.ts"),

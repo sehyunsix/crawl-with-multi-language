@@ -1,4 +1,4 @@
-import type { JobUrlExtractor , JobUrl } from "../../base.js";
+import type { JobUrlExtractor , JobUrl } from "../../shared/base.js";
 
 async function  getJobUrlsFromKakaoApiWithPage(page :number): Promise<JobUrl[]> {
     const response = await fetch(`https://careers.kakao.com/public/api/job-list?skillSet=&part=TECHNOLOGY&company=KAKAO&keyword=&employeeType=&page=${page}`, {

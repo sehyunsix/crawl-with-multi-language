@@ -1,4 +1,4 @@
-import type { JobExtractor , Job , JobUrl } from "../../base.js";
+import type { JobExtractor , Job , JobUrl } from "../../shared/base.js";
 const  JobUtil = require("../utils/job.ts")
 const path = require('path'); // 파일 경로를 위해 path 모듈 사용
 const puppeteer = require("puppeteer");
@@ -85,11 +85,11 @@ class NaverJobExtractor implements JobExtractor {
                     department: department,
                     jobDescription: jobDescription,
                     idealCandidate:  null,
+                    favicon : null,
                     preferredQualifications: preferredQualifications,
                     applyStartDate: applyStartDate,
                     applyEndDate: applyEndDate,
                     url: window.location.href,
-                    createdAt: new Date().toISOString(),
                 }
             } , jobPreDetail
         );
@@ -105,8 +105,7 @@ if ( require.main === module ) {
         const extractor = new NaverJobExtractor();
         const testUrl : JobUrl = {
             url: "https://recruit.navercorp.com/rcrt/view.do?annoId=30004007",
-            createdAt: new Date().toISOString()
-        };
+       };
         const jobs = await extractor.extractJobDetail( testUrl );
         console.log( jobs );
     } )();
