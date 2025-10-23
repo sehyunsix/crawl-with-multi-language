@@ -9,7 +9,7 @@ import saveJobsToDatabase from "../../shared/saveJob.js";
   for (const url of urls || []) {
     const jobs = await jobExtractor.extractJobDetail(url);
     if (jobs && jobs.length > 0) {
-      console.log(`Extracted ${jobs.length} job details from ${jobs[0]?.title}`);
+      console.log(`Extracted job details from ${jobs[0]?.title}`);
       jobDetails.push(...jobs);
     }
   }

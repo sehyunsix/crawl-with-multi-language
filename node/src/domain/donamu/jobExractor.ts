@@ -10,6 +10,7 @@ import {
 import { fileURLToPath } from "url";
 import path from "path";
 import puppeteer, { TimeoutError } from "puppeteer";
+import fs from "fs/promises";
 
 class DunamuJobExtractor implements JobExtractor {
   async extractJobDetail(source: JobUrl): Promise<Job[] | null> {
@@ -20,7 +21,7 @@ class DunamuJobExtractor implements JobExtractor {
       await page.goto(url, { waitUntil: "domcontentloaded" });
       await page.addScriptTag({ path: path.resolve("./src/shared/utils/script.js") });
       await page.waitForSelector(".board_tit > p", { timeout: 2000 });
-      const job = await page.evaluate((): Job => {
+      let job = await page.evaluate((): Job => {
         const title = safeGetText(".board_tit > p");
         const rawJobsText = safeGetText(".board_txt")
           .replace(/\n{2,}/g, "\n")
@@ -55,6 +56,15 @@ class DunamuJobExtractor implements JobExtractor {
           url: window.location.href,
         };
       });
+
+      //add favicon
+      try {
+        const buffer = await fs.readFile("./src/domain/donamu/favicon.png");
+        job.favicon = Buffer.from(buffer).toString("base64");
+      } catch (error) {
+        console.error("Favicon read error:", error);
+      }
+
       return [job];
     } catch (error) {
       if (error instanceof TimeoutError) {

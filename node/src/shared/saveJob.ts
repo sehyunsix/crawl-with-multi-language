@@ -19,14 +19,30 @@ async function saveJobsToDatabase(jobs: Job[]) {
   });
 
   const insertJobQuery = `
-          INSERT IGNORE INTO jobs 
+          INSERT INTO jobs 
           ( url, title, company_name, 
             job_type, region_text, department, job_description, 
             preferred_qualifications, require_experience, 
             apply_start_date, apply_end_date, raw_jobs_text,
-            is_public
+            favicon, is_public, job_valid_type
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)`;
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+          title = VALUES(title),
+          company_name = VALUES(company_name),
+          job_type = VALUES(job_type),
+          region_text = VALUES(region_text),
+          department = VALUES(department),
+          job_description = VALUES(job_description),
+          job_valid_type= VALUES(job_valid_type),
+          preferred_qualifications = VALUES(preferred_qualifications),
+          require_experience = VALUES(require_experience),
+          apply_start_date = VALUES(apply_start_date),
+          apply_end_date = VALUES(apply_end_date),
+          raw_jobs_text = VALUES(raw_jobs_text),
+          favicon = VALUES(favicon),
+          is_public = VALUES(is_public)
+          `;
   bar.start(jobs.length, 0);
   let i = 0;
   for (const job of jobs) {
@@ -44,7 +60,9 @@ async function saveJobsToDatabase(jobs: Job[]) {
       job.applyStartDate,
       job.applyEndDate,
       job.rawJobsText,
-      0,
+      job.favicon,
+      1, // is_public
+      0, // job_valid_type
     ]);
   }
   bar.stop();

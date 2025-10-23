@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "run:donamu": "npm run build && node dist/domain/donamu/index.js"
+    "favicon:donamu": "npm run build && node dist/domain/donamu/faviconExtractor.js",
+    "favicon:kakao": "npm run build && node dist/domain/kakao/faviconExtractor.js",
+    "crawl:donamu": "npm run build && node dist/domain/donamu/index.js"
   },
   "keywords": [],
   "author": "",
