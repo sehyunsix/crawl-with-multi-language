@@ -7,26 +7,25 @@ import {
   extractTeamEntities,
   getTextsFromTitledBox,
   splitAndFormatDateRange,
-  getContentAfterTitleAtMarkdownStyle,
 } from "../../shared/utils/browser-util.js";
 import { Page } from "puppeteer";
-class LineJobExtractor extends BrowserJobExtractor {
+class SktJobExtractor extends BrowserJobExtractor {
   async extractJobDetailWithPage(url: JobUrl, page: Page): Promise<Job[]> {
-    await page.waitForSelector("h3", { timeout: 2000 });
+    await page.waitForSelector(".item-column", { timeout: 2000 });
 
     let job = await page.evaluate((): Job => {
       const extractor: JobPropertyExtractor = {
         getTitle(): string {
-          return safeGetText("h3.title");
+          return safeGetText(".box-title");
         },
 
         getCompanyName(): string {
           const rawText = getTextsFromTitledBox(".box-detail-item", ".label", /(회사)/);
-          return rawText || "Line Plus";
+          return rawText || "SKT";
         },
 
         getRawJobsText(): string {
-          return safeGetText(".content_inner")
+          return safeGetText(".detail-content-wrapper")
             .replace(/\n{2,}/g, "\n")
             .trim();
         },
@@ -41,47 +40,57 @@ class LineJobExtractor extends BrowserJobExtractor {
         },
 
         getJobDescription() {
-          const description = getContentAfterTitleAtMarkdownStyle("h3", /(담당업무)/);
-          if (!description) {
-            throw new Error("Description format missing");
-          }
-          return description;
+          const departmentDescription = getTextsFromTitledBox(
+            ".detail-content-box",
+            ".item-label",
+            /(조직 소개|조직소개|부서소개|부서 소개|Who We Are|조직)/,
+          );
+
+          const jobDescription = getTextsFromTitledBox(
+            ".detail-content-box",
+            ".item-label",
+            /(수행직무)/,
+          );
+          return departmentDescription + "\n" + jobDescription;
         },
 
         getRequirements() {
-          const requirements = getContentAfterTitleAtMarkdownStyle("h3", /(자격요건)/);
-          if (!requirements) {
-            throw new Error("Requirements format missing");
-          }
-          return requirements;
+          return getTextsFromTitledBox(
+            ".detail-content-box",
+            ".item-label",
+            /(자격 요건|자격요건|Required Skills|필요역량 및 경험)/,
+          );
         },
 
         getPreferredQualifications() {
-          const preferredQualifications = getContentAfterTitleAtMarkdownStyle("h3", /(우대사항)/);
-          if (!preferredQualifications) {
-            throw new Error("PreferredQualifications format missing");
-          }
-          return preferredQualifications;
+          return null;
         },
 
         getJobType() {
-          return rawJobTypeTextToEnum("");
+          const rawText = getTextsFromTitledBox(".box-detail-item", ".label", /(유형)/);
+          return rawJobTypeTextToEnum(rawText || "");
         },
 
         getRequireExperience() {
-          return rawRequireExperienceTextToEnum("");
+          const rawText = getTextsFromTitledBox(".box-detail-item", ".label", /(구분)/);
+          return rawRequireExperienceTextToEnum(rawText || "");
         },
 
         getRegionText() {
-          return null;
+          const rawText = getTextsFromTitledBox(".box-detail-item", ".label", /(지역)/);
+          return rawText || null;
         },
 
         getApplyEndDate() {
-          return null;
+          const rawText = getTextsFromTitledBox(".box-detail-item", ".label", /(지원 기간)/);
+          const endDate = splitAndFormatDateRange(rawText || "")[1] || null;
+          return endDate;
         },
 
         getApplyStartDate() {
-          return null;
+          const rawText = getTextsFromTitledBox(".box-detail-item", ".label", /(지원 기간)/);
+          const startDate = splitAndFormatDateRange(rawText || "")[0] || null;
+          return startDate;
         },
       };
 
@@ -107,5 +116,5 @@ class LineJobExtractor extends BrowserJobExtractor {
     return [job];
   }
 }
-const lineJobExtractor = new LineJobExtractor();
-export default lineJobExtractor;
+const sktJobExtractor = new SktJobExtractor();
+export default sktJobExtractor;

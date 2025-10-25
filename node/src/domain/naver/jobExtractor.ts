@@ -1,115 +1,129 @@
-import type { JobExtractor , Job , JobUrl } from "../../shared/base.js";
-const  JobUtil = require("../utils/job.ts")
-const path = require('path'); // 파일 경로를 위해 path 모듈 사용
-const puppeteer = require("puppeteer");
+import { BrowserJobExtractor } from "../../shared/extractor.js";
+import type { JobExtractor, Job, JobUrl, JobPropertyExtractor } from "../../shared/type.js";
+import {
+  safeGetText,
+  getContentBetweenTitles,
+  rawJobTypeTextToEnum,
+  rawRequireExperienceTextToEnum,
+  extractTeamEntities,
+  getContentByText,
+  getTextsFromTitledBox,
+} from "../../shared/utils/browser-util.js";
+import { Page } from "puppeteer";
+class NaverJobExtractor extends BrowserJobExtractor {
+  async extractJobDetailWithPage(url: JobUrl, page: Page): Promise<Job[]> {
+    await page.waitForSelector(".card_title", { timeout: 2000 });
 
-class NaverJobExtractor implements JobExtractor {
-    
- 
-    async extractJobDetail( source : JobUrl ): Promise< Job[] | null> {
+    const response = await fetch(
+      url.url.replace("view.do", "loadJobList.do") + "&recordCountPerPage=1",
+      { method: "GET" },
+    );
 
+    const jobPreDetail = (await response.json()).list[0];
+    let job = await page.evaluate((jobPreDetail: any): Job => {
+      const datetime = (dateTimeString: string): string => {
+        // console.log("dateTimeString", dateTimeString);
+        const isoString = dateTimeString.replace(".", "-").replace(".", "-").replace(" ", "T");
 
-        const url = source.url;
-        
-        const browser = await puppeteer.launch({ headless: true });
-        
-        const page = await browser.newPage();
-        
-        await page.goto( url , { waitUntil: "domcontentloaded"});
+        return new Date(isoString).toISOString();
+      };
+      const extractor: JobPropertyExtractor = {
+        getTitle(): string {
+          return safeGetText(".card_title");
+        },
 
-        await page.addScriptTag({ path: path.resolve('./src/utils/browser-util.js') });
-        page.on('console', async (msg : any) => {
-        // 메시지 타입에 따라 Node.js 콘솔 함수를 다르게 호출 (log, error, warn 등)
-        const msgType = msg.type();
-        
-        // msg.args()는 JSHandle 객체의 배열이므로, jsonValue()로 실제 값을 비동기적으로 가져옵니다.
-        const args = await Promise.all(msg.args().map( (arg :any)  => arg.jsonValue()));
+        getCompanyName(): string {
+          return "네이버";
+        },
 
-            // Node.js 콘솔에 출력
-            console.log('[브라우저]', ...args);
-            
-        });
+        getRawJobsText(): string {
+          return safeGetText(".detail_wrap")
+            .replace(/\n{2,}/g, "\n")
+            .trim();
+        },
+        getDepartment() {
+          const departmentDescription = getTextsFromTitledBox(
+            ".detail_box",
+            ".detail_title",
+            /(조직 소개|조직소개|부서소개|부서 소개|Who We Are|조직)/,
+          );
 
-        await page.waitForSelector(".card_title");
-        
-        
-        const response =await fetch(
-            source.url.replace("view.do", "loadJobList.do" )+"&recordCountPerPage=1", {
-            "method": "GET"
-        });
-      
+          return extractTeamEntities(departmentDescription || " ")[0] || null;
+        },
 
-        const jobPreDetail = (await response.json()).list[0];
-        
-    
-        // console.log( jobPreDetail );
+        getJobDescription() {
+          const departmentDescription = getTextsFromTitledBox(
+            ".detail_box",
+            ".detail_title",
+            /(조직 소개|조직소개|부서소개|부서 소개|Who We Are|조직)/,
+          );
 
-        const job = await page.evaluate( (jobPreDetail : any) : Job => {
+          const jobDescription = getTextsFromTitledBox(
+            ".detail_box",
+            ".detail_title",
+            /(업무 내용|업무내용|What You'll Do|담당 업무)/,
+          );
+          return departmentDescription + "\n" + jobDescription;
+        },
 
-        const  datetime = (dateTimeString : string) : string => {
-            console.log( "dateTimeString" , dateTimeString );
-            const isoString = dateTimeString
-                .replace('.', '-') 
-                .replace('.', '-')
-                .replace(' ', 'T');  
+        getRequirements() {
+          return getTextsFromTitledBox(
+            ".detail_box",
+            ".detail_title",
+            /(자격 요건|자격요건|Required Skills|필요 역량)/,
+          );
+        },
 
-            return (new Date(isoString)).toISOString();
-        }
-     
-        const win = (window as any);
-        const rootElement = document.querySelector(".detail_box");
-        const title = win.safeGetText(".card_title"); 
-        const rawJobsText = win.safeGetText(".detail_box").replace(/\n{2,}/g, '\n').trim();
-        const company = "네이버"
-        const jobType = win.rawJobTypeTextToEnum( jobPreDetail.empTypeCdNm );
-        const regionText =win.getContentByText("li", "근무지역").split(":")[1];
-        const departmentDescription =win.getContentBetweenTitles(rootElement,"Who We Are", "What You'll Do" )
-        const department = win.extractTeamEntities(departmentDescription)[0] || null;
-        const jobDescription = win.getContentBetweenTitles(rootElement,"What You'll Do","Preferred Skills");
-        const preferredQualifications = win.getContentBetweenTitles(rootElement, "Preferred Skills","전형절차 및 일정")
-        const requireExperience =win.rawRequireExperienceTextToEnum( jobPreDetail.entTypeCdNm );
-        const applyStartDate = datetime(jobPreDetail.staYmdTime)
-        const applyEndDate = datetime(jobPreDetail.endYmdTime)
-        console.log( applyStartDate , applyEndDate );
-    
-    // --- 최종 반환 객체 ---
-        return {
-                    id: "0",
-                    title: company + " " + title,
-                    rawJobsText: rawJobsText,
-                    company: company,
-                    requireExperience: requireExperience,
-                    jobType: jobType,
-                    regionText: regionText,
-                    requirements: "",
-                    department: department,
-                    jobDescription: jobDescription,
-                    idealCandidate:  null,
-                    favicon : null,
-                    preferredQualifications: preferredQualifications,
-                    applyStartDate: applyStartDate,
-                    applyEndDate: applyEndDate,
-                    url: window.location.href,
-                }
-            } , jobPreDetail
-        );
+        getPreferredQualifications() {
+          return getTextsFromTitledBox(
+            ".detail_box",
+            ".detail_title",
+            /(우대 사항|우대사항|Preferred Skills)/,
+          );
+        },
 
-        await browser.close();
-        return [ job ];
-    }
+        getJobType() {
+          return rawJobTypeTextToEnum(jobPreDetail.empTypeCdNm);
+        },
+
+        getRequireExperience() {
+          return rawRequireExperienceTextToEnum(jobPreDetail.entTypeCdNm);
+        },
+
+        getRegionText() {
+          return getContentByText("li", "근무지역").split(":")[1] || null;
+        },
+
+        getApplyEndDate() {
+          return datetime(jobPreDetail.endYmdTime).slice(0, 19).replace("T", " ");
+        },
+
+        getApplyStartDate() {
+          return datetime(jobPreDetail.staYmdTime).slice(0, 19).replace("T", " ");
+        },
+      };
+
+      return {
+        id: "0",
+        title: extractor.getTitle(),
+        rawJobsText: extractor.getRawJobsText(),
+        company: extractor.getCompanyName(),
+        requireExperience: extractor.getRequireExperience(),
+        jobType: extractor.getJobType(),
+        regionText: extractor.getRegionText(),
+        requirements: extractor.getRequirements(),
+        department: extractor.getDepartment(),
+        jobDescription: extractor.getJobDescription(),
+        preferredQualifications: extractor.getPreferredQualifications(),
+        applyStartDate: extractor.getApplyStartDate(),
+        applyEndDate: extractor.getApplyEndDate(),
+        idealCandidate: null,
+        favicon: null,
+        url: window.location.href,
+      };
+    }, jobPreDetail);
+    return [job];
+  }
 }
-
-
-if ( require.main === module ) {
-    ( async () => {
-        const extractor = new NaverJobExtractor();
-        const testUrl : JobUrl = {
-            url: "https://recruit.navercorp.com/rcrt/view.do?annoId=30004007",
-       };
-        const jobs = await extractor.extractJobDetail( testUrl );
-        console.log( jobs );
-    } )();
-}
-
 const naverJobExtractor = new NaverJobExtractor();
-module.exports = naverJobExtractor;
+export default naverJobExtractor;

@@ -1,4 +1,5 @@
-import type { JobExtractor, Job, JobUrl } from "../../shared/base.js";
+import type { Job, JobPropertyExtractor, JobUrl } from "../../shared/type.js";
+import { BrowserJobExtractor } from "../../shared/extractor.js";
 import {
   safeGetText,
   getContentAfterTitle,
@@ -7,91 +8,85 @@ import {
   extractTeamEntities,
   getContentByText,
 } from "../../shared/utils/browser-util.js";
-import { fileURLToPath } from "url";
-import path from "path";
-import puppeteer, { TimeoutError } from "puppeteer";
-import fs from "fs/promises";
+import { Page, TimeoutError } from "puppeteer";
 
-class DunamuJobExtractor implements JobExtractor {
-  async extractJobDetail(source: JobUrl): Promise<Job[] | null> {
-    const url = source.url;
-    const browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
-    try {
-      await page.goto(url, { waitUntil: "domcontentloaded" });
-      await page.addScriptTag({ path: path.resolve("./src/shared/utils/script.js") });
-      await page.waitForSelector(".board_tit > p", { timeout: 2000 });
-      let job = await page.evaluate((): Job => {
-        const title = safeGetText(".board_tit > p");
-        const rawJobsText = safeGetText(".board_txt")
-          .replace(/\n{2,}/g, "\n")
-          .trim();
-        const departmentDescription = getContentAfterTitle(".article.top", "조직 소개");
-        const department = extractTeamEntities(departmentDescription)[0] || null;
-        const jobDescription = getContentAfterTitle(".article.top", "주요업무");
-        const requirements = getContentAfterTitle(".article.top", "자격요건");
-        const preferredQualifications = getContentAfterTitle(".article.top", "우대사항");
-        const company = "두나무";
-        const regionText = getContentByText("li", "근무지역").split(":")[1];
-        const jobType = rawJobTypeTextToEnum(getContentByText("li", "고용형태"));
-        const requireExperience = rawRequireExperienceTextToEnum(
-          getContentByText("li", "채용유형"),
-        );
-        return {
-          id: "0",
-          title: company + " " + title,
-          rawJobsText: rawJobsText,
-          company: company,
-          requireExperience: requireExperience,
-          jobType: jobType,
-          regionText: regionText || null,
-          requirements: requirements,
-          department: department || null,
-          jobDescription: jobDescription,
-          favicon: null,
-          idealCandidate: null,
-          preferredQualifications: preferredQualifications,
-          applyStartDate: null,
-          applyEndDate: null,
-          url: window.location.href,
-        };
-      });
+class DunamuJobExtractor extends BrowserJobExtractor {
+  async extractJobDetailWithPage(url: JobUrl, page: Page): Promise<Job[]> {
+    await page.waitForSelector(".board_tit > p", { timeout: 2000 });
+    let job = await page.evaluate((): Job => {
+      const extractor: JobPropertyExtractor = {
+        getTitle(): string {
+          return safeGetText(".board_tit > p");
+        },
 
-      //add favicon
-      try {
-        const buffer = await fs.readFile("./src/domain/donamu/favicon.png");
-        job.favicon = Buffer.from(buffer).toString("base64");
-      } catch (error) {
-        console.error("Favicon read error:", error);
-      }
+        getCompanyName(): string {
+          return "두나무";
+        },
 
-      return [job];
-    } catch (error) {
-      if (error instanceof TimeoutError) {
-        console.error(`TimeoutError: Failed to extract job details from ${url}`);
-      } else {
-        console.error(`Error: Failed to extract job details from ${url}:`, error);
-      }
-      return [];
-    } finally {
-      await page.close();
-      await browser.close();
-    }
+        getRawJobsText(): string {
+          return safeGetText(".board_txt")
+            .replace(/\n{2,}/g, "\n")
+            .trim();
+        },
+        getDepartment() {
+          const departmentDescription = getContentAfterTitle(".article.top", "조직 소개");
+          return extractTeamEntities(departmentDescription)[0] || null;
+        },
+
+        getJobDescription() {
+          return getContentAfterTitle(".article.top", "주요업무");
+        },
+
+        getJobType() {
+          return rawJobTypeTextToEnum(getContentByText("li", "고용형태"));
+        },
+
+        getRequireExperience() {
+          return rawRequireExperienceTextToEnum(getContentByText("li", "채용유형"));
+        },
+
+        getRegionText() {
+          const regionText = getContentByText("li", "근무지역").split(":")[1];
+          return regionText || null;
+        },
+
+        getPreferredQualifications() {
+          return getContentAfterTitle(".article.top", "우대사항");
+        },
+
+        getRequirements() {
+          return null;
+        },
+
+        getApplyEndDate() {
+          return null;
+        },
+
+        getApplyStartDate() {
+          return null;
+        },
+      };
+
+      return {
+        id: "0",
+        title: extractor.getTitle(),
+        rawJobsText: extractor.getRawJobsText(),
+        company: extractor.getCompanyName(),
+        requireExperience: extractor.getRequireExperience(),
+        jobType: extractor.getJobType(),
+        regionText: extractor.getRegionText(),
+        requirements: extractor.getRequirements(),
+        department: extractor.getDepartment(),
+        jobDescription: extractor.getJobDescription(),
+        preferredQualifications: extractor.getPreferredQualifications(),
+        applyStartDate: extractor.getApplyStartDate(),
+        applyEndDate: extractor.getApplyEndDate(),
+        idealCandidate: null,
+        favicon: null,
+        url: window.location.href,
+      };
+    });
+    return [job];
   }
 }
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-if (process.argv[1] === __filename) {
-  (async () => {
-    const extractor = new DunamuJobExtractor();
-    const testUrl: JobUrl = {
-      url: "https://www.dunamu.com/careers/jobs/1521",
-    };
-    const jobs = await extractor.extractJobDetail(testUrl);
-    console.log(jobs);
-  })();
-}
-
 export default new DunamuJobExtractor();

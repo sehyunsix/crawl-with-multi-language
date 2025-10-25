@@ -1,46 +1,34 @@
-import type { JobUrlExtractor , JobUrl } from "../../shared/base.js";
-const puppeteer = require("puppeteer");
-const autoScroll =require("../../utils/page.ts");
+import type { Page } from "puppeteer";
+import { BrowserUrlExtractor } from "../../shared/extractor.js";
+import type { JobUrlExtractor, JobUrl } from "../../shared/type.js";
+import { autoScroll } from "../../shared/utils/page.js";
 
-class LineJobUrlExtractor implements JobUrlExtractor {
+class LineJobUrlExtractor extends BrowserUrlExtractor {
+  constructor() {
+    super("careers.linecorp.com");
+  }
 
-    private domain : string  = "careers.linecorp.com";
-    
-    public getDomain(): string {
-        return this.domain;
-    }
+  async extractJobUrlsWithPage(page: Page): Promise<JobUrl[]> {
+    await page.goto("https://careers.linecorp.com/jobs", { waitUntil: "domcontentloaded" });
 
-    async extractJobUrls(): Promise<JobUrl[] | null> {
+    await autoScroll(page, 10);
 
-     
+    const selector = "a[href^='/jobs/']";
 
-        const browser = await puppeteer.launch({ headless: true });
-        
-        const page = await browser.newPage();
+    await page.waitForSelector(selector);
 
-        await page.goto("https://careers.linecorp.com/jobs", { waitUntil: "domcontentloaded"});
+    const urls = await page.evaluate(() =>
+      Array.from(document.querySelectorAll("a[href^='/jobs/']")).map(
+        (a) => (a as HTMLAnchorElement).href,
+      ),
+    );
 
-        await autoScroll(page ,10);
-
-        const selector = "a[href^='/jobs/']";
-
-        await page.waitForSelector(selector);
-    
-        const urls = await page.evaluate(() =>
-            Array.from(document.querySelectorAll("a[href^='/jobs/']"))
-                .map(a  => ( a as  HTMLAnchorElement).href)
-        );
-    
-        await browser.close();
-        
-        const results: JobUrl[] = urls.map( (url: string) => ( {
-            url,
-            createdAt: new Date().toISOString()
-        } ) );
-        return results;
-    }
+    const results: JobUrl[] = urls.map((url: string) => ({
+      url,
+    }));
+    return results;
+  }
 }
 
-
-const tossJoBUrlExtractor = new LineJobUrlExtractor();
-module.exports = tossJoBUrlExtractor;
+const lineJoBUrlExtractor = new LineJobUrlExtractor();
+export default lineJoBUrlExtractor;

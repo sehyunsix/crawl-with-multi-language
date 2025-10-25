@@ -8,7 +8,12 @@
     "build": "tsc",
     "favicon:donamu": "npm run build && node dist/domain/donamu/faviconExtractor.js",
     "favicon:kakao": "npm run build && node dist/domain/kakao/faviconExtractor.js",
-    "crawl:donamu": "npm run build && node dist/domain/donamu/index.js"
+    "favicon:line": "npm run build && node dist/domain/line/faviconExtractor.js",
+    "crawl:toss": "npm run build && node dist/domain/toss/index.js",
+    "crawl:donamu": "npm run build && node dist/domain/donamu/index.js",
+    "crawl:naver": "npm run build && node dist/domain/naver/index.js",
+    "crawl:skt": "npm run build && node dist/domain/skt/index.js",
+    "crawl:line": "npm run build && node dist/domain/line/index.js"
   },
   "keywords": [],
   "author": "",

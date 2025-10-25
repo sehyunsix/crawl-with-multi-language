@@ -1,17 +1,14 @@
-import type { JobUrlExtractor, JobUrl } from "../../shared/base.js";
+import type { JobUrlExtractor, JobUrl } from "../../shared/type.js";
+import { BrowserUrlExtractor } from "../../shared/extractor.js";
 import puppeteer from "puppeteer";
+import { Page } from "puppeteer";
 
-class DonamuJobUrlExtractor implements JobUrlExtractor {
-  private domain: string = "www.dunamu.com";
-
-  public getDomain(): string {
-    return this.domain;
+class DonamuJobUrlExtractor extends BrowserUrlExtractor {
+  constructor() {
+    super("www.donamu.com");
   }
 
-  async extractJobUrls(): Promise<JobUrl[] | null> {
-    const browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
-
+  async extractJobUrlsWithPage(page: Page): Promise<JobUrl[]> {
     await page.goto("https://www.dunamu.com/careers/jobs?category=engineering", {
       waitUntil: "domcontentloaded",
     });
@@ -25,10 +22,6 @@ class DonamuJobUrlExtractor implements JobUrlExtractor {
         (a) => (a as HTMLAnchorElement).href,
       ),
     );
-
-    await page.close();
-    await browser.close();
-
     const results: JobUrl[] = urls.map((url: string) => ({
       url,
       createdAt: new Date().toISOString(),

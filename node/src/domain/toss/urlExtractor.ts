@@ -1,43 +1,32 @@
-import type { JobUrlExtractor , JobUrl } from "../../shared/base.js";
-const puppeteer = require("puppeteer");
+import { BrowserUrlExtractor } from "../../shared/extractor.js";
+import type { JobUrlExtractor, JobUrl } from "../../shared/type.js";
+import { Page } from "puppeteer";
 
-class TossJobUrlExtractor implements JobUrlExtractor {
+class TossJobUrlExtractor extends BrowserUrlExtractor {
+  constructor() {
+    super("toss.im");
+  }
 
-    private domain : string  = "toss.im";
-    
-    public getDomain(): string {
-        return this.domain;
-    }
+  async extractJobUrlsWithPage(page: Page): Promise<JobUrl[]> {
+    await page.goto("https://toss.im/career/jobs", { waitUntil: "domcontentloaded" });
 
-    async extractJobUrls(): Promise<JobUrl[] | null> {
+    const selector = "a[href^='/career/job']";
 
-     
+    await page.waitForSelector(selector);
 
-        const browser = await puppeteer.launch({ headless: true });
-        
-        const page = await browser.newPage();
+    const urls = await page.evaluate(() =>
+      Array.from(document.querySelectorAll("a[href^='/career/job']")).map(
+        (a) => (a as HTMLAnchorElement).href,
+      ),
+    );
 
-        await page.goto("https://toss.im/career/jobs", { waitUntil: "domcontentloaded"});
-    
-        const selector = "a[href^='/career/job']";
+    const results: JobUrl[] = urls.map((url: string) => ({
+      url,
+    }));
 
-        await page.waitForSelector(selector);
-    
-        const urls = await page.evaluate(() =>
-            Array.from(document.querySelectorAll("a[href^='/career/job']"))
-                .map(a  => ( a as  HTMLAnchorElement).href)
-        );
-    
-        await browser.close();
-        
-        const results: JobUrl[] = urls.map( (url: string) => ( {
-            url,
-            createdAt: new Date().toISOString()
-        } ) );
-        return results;
-    }
+    return results;
+  }
 }
 
-
 const tossJoBUrlExtractor = new TossJobUrlExtractor();
-module.exports = tossJoBUrlExtractor;
+export default tossJoBUrlExtractor;
