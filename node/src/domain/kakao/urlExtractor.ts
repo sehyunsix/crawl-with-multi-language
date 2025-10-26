@@ -49,11 +49,4 @@ class KakaoJobUrlExtractor implements JobUrlExtractor {
 }
 
 const kakaoUrlExtractor = new KakaoJobUrlExtractor();
-module.exports = kakaoUrlExtractor;
-
-if (module === require.main) {
-  (async () => {
-    const urls = await kakaoUrlExtractor.extractJobUrls();
-    console.log(urls);
-  })();
-}
+export default kakaoUrlExtractor;

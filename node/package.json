@@ -13,7 +13,8 @@
     "crawl:donamu": "npm run build && node dist/domain/donamu/index.js",
     "crawl:naver": "npm run build && node dist/domain/naver/index.js",
     "crawl:skt": "npm run build && node dist/domain/skt/index.js",
-    "crawl:line": "npm run build && node dist/domain/line/index.js"
+    "crawl:line": "npm run build && node dist/domain/line/index.js",
+    "crawl:kakao": "npm run build && node dist/domain/kakao/index.js"
   },
   "keywords": [],
   "author": "",

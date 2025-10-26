@@ -1,4 +1,4 @@
-import type { Job, JobExtractor, JobUrl, JobUrlExtractor } from "./type.js";
+import type { Job, JobExtractor, JobPropertyExtractor, JobUrl, JobUrlExtractor } from "./type.js";
 import puppeteer, { Page, TimeoutError } from "puppeteer";
 import path from "path";
 
@@ -108,4 +108,59 @@ export abstract class ApiUrlExtractor implements JobUrlExtractor {
     return jobUrls;
   }
   protected abstract extractJobUrlsFromApi(): Promise<JobUrl[]>;
+}
+
+export abstract class ApiJobExtractor implements JobExtractor {
+  private domain: string = "";
+
+  constructor(domain: string) {
+    this.domain = domain;
+  }
+
+  getDomain(): string {
+    return this.domain;
+  }
+  async extractJobDetail(url: JobUrl): Promise<Job[]> {
+    const jobs = await this.extractJobDetailFromApi(url);
+    return jobs;
+  }
+  protected abstract extractJobDetailFromApi(url: JobUrl): Promise<Job[]>;
+}
+
+export abstract class BaseJobPropertyExtractor implements JobPropertyExtractor {
+  abstract getTitle(): string;
+  abstract getCompanyName(): string;
+  abstract getRawJobsText(): string;
+  abstract getJobDescription(): string;
+
+  getJobType(): "정규직" | "인턴" | null {
+    return "정규직";
+  }
+  getRequireExperience(): "신입" | "경력" | null {
+    return "신입";
+  }
+
+  getDepartment(): string | null {
+    return null;
+  }
+
+  getRequirements(): string | null {
+    return null;
+  }
+
+  getPreferredQualifications(): string | null {
+    return null;
+  }
+
+  getRegionText(): string | null {
+    return null;
+  }
+
+  getApplyStartDate(): string | null {
+    return null;
+  }
+
+  getApplyEndDate(): string | null {
+    return null;
+  }
 }
