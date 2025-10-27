@@ -41,11 +41,4 @@ class KtJobUrlExractor implements JobUrlExtractor {
 }
 
 const ktJobUrlExractor = new KtJobUrlExractor();
-module.exports = ktJobUrlExractor;
-
-if (module === require.main) {
-  (async () => {
-    const urls = await ktJobUrlExractor.extractJobUrls();
-    console.log(urls);
-  })();
-}
+export default ktJobUrlExractor;

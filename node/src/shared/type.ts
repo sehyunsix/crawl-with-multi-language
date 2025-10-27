@@ -2,13 +2,17 @@ interface JobUrl {
   url: string;
 }
 
+type JobType = "정규직" | "인턴" | null;
+
+type RequireExperience = "신입" | "경력" | null;
+
 interface Job extends JobUrl {
   id: string;
   title: string;
   rawJobsText: string;
   company: string;
-  requireExperience: "신입" | "경력" | null;
-  jobType: "정규직" | "인턴" | null;
+  requireExperience: RequireExperience;
+  jobType: JobType;
   regionText: string | null;
   requirements: string | null;
   department: string | null;
@@ -36,8 +40,8 @@ interface JobPropertyExtractor {
   getTitle(): string;
   getRawJobsText(): string;
   getCompanyName(): string;
-  getJobType(): "정규직" | "인턴" | null;
-  getRequireExperience(): "신입" | "경력" | null;
+  getJobType(): JobType;
+  getRequireExperience(): RequireExperience;
   getRegionText(): string | null;
   getDepartment(): string | null;
   getJobDescription(): string | null;
@@ -47,4 +51,13 @@ interface JobPropertyExtractor {
   getApplyEndDate(): string | null;
 }
 
-export type { JobUrl, Job, Source, JobUrlExtractor, JobExtractor, JobPropertyExtractor };
+export type {
+  JobUrl,
+  Job,
+  Source,
+  JobUrlExtractor,
+  JobExtractor,
+  JobPropertyExtractor,
+  JobType,
+  RequireExperience,
+};
