@@ -11,6 +11,9 @@ import {
 import { Page, TimeoutError } from "puppeteer";
 
 class DunamuJobExtractor extends BrowserJobExtractor {
+  constructor() {
+    super("www.dunamu.com");
+  }
   async extractJobDetailWithPage(url: JobUrl, page: Page): Promise<Job[]> {
     await page.waitForSelector(".board_tit > p", { timeout: 2000 });
     let job = await page.evaluate((): Job => {

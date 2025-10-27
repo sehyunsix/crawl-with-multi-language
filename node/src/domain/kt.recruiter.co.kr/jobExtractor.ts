@@ -12,6 +12,9 @@ import { JSDOM } from "jsdom";
 import jQuery from "jquery";
 
 class KtJobExtractor extends BrowserJobExtractor {
+  constructor() {
+    super("kt.recruiter.co.kr");
+  }
   protected async extractJobDetailWithPage(url: JobUrl, page: Page): Promise<Job[]> {
     const jobIdMatch = url.url.match(/jobs\/([A-Za-z0-9-]+)/);
 

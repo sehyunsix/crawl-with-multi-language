@@ -1,8 +1,14 @@
 import type { Job, JobExtractor, JobPropertyExtractor, JobUrl, JobUrlExtractor } from "./type.js";
+import fs from "fs";
 import puppeteer, { Page, TimeoutError } from "puppeteer";
 import path from "path";
 
 export abstract class BrowserJobExtractor implements JobExtractor {
+  private domain: string = "";
+
+  constructor(domain: string) {
+    this.domain = domain;
+  }
   async extractJobDetail(url: JobUrl): Promise<Job[]> {
     const browser = await puppeteer.launch({
       headless: true,
@@ -47,7 +53,7 @@ export abstract class BrowserJobExtractor implements JobExtractor {
       await page.close();
       await browser.close();
     }
-    const favicon = await this.extractJobFavicon();
+    const favicon = await this.readJobFavicon();
     jobs.forEach((job) => {
       job.favicon = favicon;
     });
@@ -56,7 +62,11 @@ export abstract class BrowserJobExtractor implements JobExtractor {
 
   protected abstract extractJobDetailWithPage(url: JobUrl, page: Page): Promise<Job[]>;
 
-  async extractJobFavicon(): Promise<string | null> {
+  async readJobFavicon(): Promise<string | null> {
+    this.domain;
+    const filePath = path.resolve(`./src/domain/${this.domain}/favicon.png`);
+    const file = fs.readFileSync(filePath); // ❌ utf-8 제거, Buffer로 읽기
+    const base64 = file.toString("base64");
     return null;
   }
 }
@@ -162,5 +172,31 @@ export abstract class BaseJobPropertyExtractor implements JobPropertyExtractor {
 
   getApplyEndDate(): string | null {
     return null;
+  }
+}
+
+export class FaviconExtractor {
+  private url: string;
+  private host: string;
+  constructor(url: string, host?: string) {
+    this.url = url;
+    this.host = new URL(url).hostname;
+    if (host) {
+      this.host = host;
+    }
+  }
+
+  async extractAndSaveFavicon() {
+    const response = await fetch(this.url, {
+      headers: {
+        accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+      },
+    });
+    // 응답 본문을 바이너리 버퍼로 변환
+    const buffer = Buffer.from(await response.arrayBuffer());
+    // 이미지 파일로 저장
+    await fs.writeFileSync(`./src/domain/${this.host}/favicon.png`, buffer);
+
+    console.log("✅ favicon.png 저장 완료!");
   }
 }

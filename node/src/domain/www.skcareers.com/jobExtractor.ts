@@ -1,51 +1,42 @@
 import { BrowserJobExtractor } from "../../shared/extractor.js";
-import type { JobExtractor, Job, JobUrl, JobPropertyExtractor } from "../../shared/type.js";
+import type { Job, JobUrl, JobPropertyExtractor } from "../../shared/type.js";
 import {
   safeGetText,
-  getContentBetweenTitles,
   rawJobTypeTextToEnum,
   rawRequireExperienceTextToEnum,
   extractTeamEntities,
-  getContentByText,
   getTextsFromTitledBox,
+  splitAndFormatDateRange,
 } from "../../shared/utils/browser-util.js";
 import { Page } from "puppeteer";
-class NaverJobExtractor extends BrowserJobExtractor {
+class SktJobExtractor extends BrowserJobExtractor {
+  constructor() {
+    super("www.skcareers.com");
+  }
   async extractJobDetailWithPage(url: JobUrl, page: Page): Promise<Job[]> {
-    await page.waitForSelector(".card_title", { timeout: 2000 });
+    await page.waitForSelector(".item-column", { timeout: 2000 });
 
-    const response = await fetch(
-      url.url.replace("view.do", "loadJobList.do") + "&recordCountPerPage=1",
-      { method: "GET" },
-    );
-
-    const jobPreDetail = (await response.json()).list[0];
-    let job = await page.evaluate((jobPreDetail: any): Job => {
-      const datetime = (dateTimeString: string): string => {
-        // console.log("dateTimeString", dateTimeString);
-        const isoString = dateTimeString.replace(".", "-").replace(".", "-").replace(" ", "T");
-
-        return new Date(isoString).toISOString();
-      };
+    let job = await page.evaluate((): Job => {
       const extractor: JobPropertyExtractor = {
         getTitle(): string {
-          return safeGetText(".card_title");
+          return safeGetText(".box-title");
         },
 
         getCompanyName(): string {
-          return "네이버";
+          const rawText = getTextsFromTitledBox(".box-detail-item", ".label", /(회사)/);
+          return rawText || "SKT";
         },
 
         getRawJobsText(): string {
-          return safeGetText(".detail_wrap")
+          return safeGetText(".detail-content-wrapper")
             .replace(/\n{2,}/g, "\n")
             .trim();
         },
         getDepartment() {
           const departmentDescription = getTextsFromTitledBox(
-            ".detail_box",
-            ".detail_title",
-            /(조직 소개|조직소개|부서소개|부서 소개|Who We Are|조직)/,
+            ".detail-content-box",
+            ".item-label",
+            /(수행직무)/,
           );
 
           return extractTeamEntities(departmentDescription || " ")[0] || null;
@@ -53,53 +44,56 @@ class NaverJobExtractor extends BrowserJobExtractor {
 
         getJobDescription() {
           const departmentDescription = getTextsFromTitledBox(
-            ".detail_box",
-            ".detail_title",
+            ".detail-content-box",
+            ".item-label",
             /(조직 소개|조직소개|부서소개|부서 소개|Who We Are|조직)/,
           );
 
           const jobDescription = getTextsFromTitledBox(
-            ".detail_box",
-            ".detail_title",
-            /(업무 내용|업무내용|What You'll Do|담당 업무)/,
+            ".detail-content-box",
+            ".item-label",
+            /(수행직무)/,
           );
           return departmentDescription + "\n" + jobDescription;
         },
 
         getRequirements() {
           return getTextsFromTitledBox(
-            ".detail_box",
-            ".detail_title",
-            /(자격 요건|자격요건|Required Skills|필요 역량)/,
+            ".detail-content-box",
+            ".item-label",
+            /(자격 요건|자격요건|Required Skills|필요역량 및 경험)/,
           );
         },
 
         getPreferredQualifications() {
-          return getTextsFromTitledBox(
-            ".detail_box",
-            ".detail_title",
-            /(우대 사항|우대사항|Preferred Skills)/,
-          );
+          return null;
         },
 
         getJobType() {
-          return rawJobTypeTextToEnum(jobPreDetail.empTypeCdNm);
+          const rawText = getTextsFromTitledBox(".box-detail-item", ".label", /(유형)/);
+          return rawJobTypeTextToEnum(rawText || "");
         },
 
         getRequireExperience() {
-          return rawRequireExperienceTextToEnum(jobPreDetail.entTypeCdNm);
+          const rawText = getTextsFromTitledBox(".box-detail-item", ".label", /(구분)/);
+          return rawRequireExperienceTextToEnum(rawText || "");
         },
 
         getRegionText() {
-          return getContentByText("li", "근무지역").split(":")[1] || null;
+          const rawText = getTextsFromTitledBox(".box-detail-item", ".label", /(지역)/);
+          return rawText || null;
         },
 
         getApplyEndDate() {
-          return datetime(jobPreDetail.endYmdTime).slice(0, 19).replace("T", " ");
+          const rawText = getTextsFromTitledBox(".box-detail-item", ".label", /(지원 기간)/);
+          const endDate = splitAndFormatDateRange(rawText || "")[1] || null;
+          return endDate;
         },
 
         getApplyStartDate() {
-          return datetime(jobPreDetail.staYmdTime).slice(0, 19).replace("T", " ");
+          const rawText = getTextsFromTitledBox(".box-detail-item", ".label", /(지원 기간)/);
+          const startDate = splitAndFormatDateRange(rawText || "")[0] || null;
+          return startDate;
         },
       };
 
@@ -121,9 +115,9 @@ class NaverJobExtractor extends BrowserJobExtractor {
         favicon: null,
         url: window.location.href,
       };
-    }, jobPreDetail);
+    });
     return [job];
   }
 }
-const naverJobExtractor = new NaverJobExtractor();
-export default naverJobExtractor;
+const sktJobExtractor = new SktJobExtractor();
+export default sktJobExtractor;

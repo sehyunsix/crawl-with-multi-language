@@ -11,6 +11,9 @@ import {
 } from "../../shared/utils/browser-util.js";
 import { Page } from "puppeteer";
 class LineJobExtractor extends BrowserJobExtractor {
+  constructor() {
+    super("line.plus");
+  }
   async extractJobDetailWithPage(url: JobUrl, page: Page): Promise<Job[]> {
     await page.waitForSelector("h3", { timeout: 2000 });
 

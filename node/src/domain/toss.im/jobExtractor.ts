@@ -12,6 +12,9 @@ import {
 import { Page } from "puppeteer";
 
 class TossJobExtractor extends BrowserJobExtractor {
+  constructor() {
+    super("toss.im");
+  }
   async extractJobDetailWithPage(url: JobUrl, page: Page): Promise<Job[]> {
     await page.waitForSelector("span[class^='css-nkt64x']", { timeout: 2000 });
 

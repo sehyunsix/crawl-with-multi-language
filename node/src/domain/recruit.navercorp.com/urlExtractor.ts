@@ -2,7 +2,7 @@ import type { JobUrlExtractor, JobUrl } from "../../shared/type.js";
 import { ApiUrlExtractor } from "../../shared/extractor.js";
 class NaverJobUrlExractor extends ApiUrlExtractor {
   constructor() {
-    super("recruit.naver.com");
+    super("recruit.navercorp.com");
   }
 
   // @override
